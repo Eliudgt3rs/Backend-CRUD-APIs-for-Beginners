@@ -1,8 +1,10 @@
 const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
-const Product = require("./models/product.model.js");
+const Product = require("./models/product.model");
 const prouductRoute = require("./routes/product.route.js");
+require("dotenv").config();
+
 
 // Middleware
 app.use(express.json());
@@ -11,7 +13,6 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use("/api/product", prouductRoute);
 app.use("/api/user", require("./routes/user.route.js"));
-
 
 
 // Connect to MongoDB and start the server

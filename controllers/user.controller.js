@@ -1,7 +1,9 @@
-const jwt = require("jsonwebtoken");
+
 const bcrypt = require("bcryptjs");
 const asyncHandler = require("express-async-handler");
-const User = require("../models/user.model.js");
+const User = require("../models/user.model");
+const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
 
 //Create User
 //route POST /api/user
@@ -35,9 +37,11 @@ const createUser = asyncHandler(async (req, res) => {
 
     if (user) {
         res.status(201).json({
+            message: "User Created Successfully",
             _id: user.id,
             name: user.name,
             email: user.email,
+            token: generateToken(user._id)
         });
     } else {
         res.status(400);
@@ -45,6 +49,7 @@ const createUser = asyncHandler(async (req, res) => {
     }
 
 });
+
 
 //Authenticate User
 //route POST /api/user/login
@@ -58,14 +63,20 @@ const loginUser = asyncHandler(async (req, res) => {
     }
     //Check for user email
     const user = await User.findOne({ email });
+
+    //Check if user exists and password matches
     if (user && (await bcrypt.compare(password, user.password))) {
-        res.status(201).json({ message: "User Logged in Successfully" });
+        res.status(201).json({
+            message: "User Logged in Successfully",
+            _id: user.id,
+            name: user.name,
+            email: user.email,
+            token: generateToken(user._id)
+        });
     } else {
         res.status(400);
         throw new Error("Invalid credentials");
     }
-
-  res.status(201).json({ message: "User Logged in Successfully" });     
 });
 
 //Get User Profile
@@ -75,9 +86,37 @@ const getUser = asyncHandler( async(req, res) => {
     res.status(201).json({ message: "User Data Retrieved Successfully" });
 });
 
+//Generate token
+const generateToken = (id) => {
+    return jwt.sign({ id }, process.env.JWT_SECRET, {
+        expiresIn: "30d",
+    });
+};
+
+//deleteUser
+const deleteUser = asyncHandler(async (req, res) => {
+    try {
+        const { id } = req.params;
+        // ✅ Validate ID before querying
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid user ID format" });
+    }
+
+        const user = await User.findByIdAndDelete(id);
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        res.status(200).json({ message: "User deleted successfully" });
+
+    } catch (error) {
+        res.status(500).json(error.message );
+    }
+});
 
 module.exports = {
     createUser,
     loginUser,
-    getUser
+    getUser,
+    deleteUser
 };
