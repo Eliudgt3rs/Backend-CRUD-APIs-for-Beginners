@@ -17,9 +17,7 @@ app.use("/api/user", require("./routes/user.route.js"));
 
 // Connect to MongoDB and start the server
 mongoose
-  .connect(
-    "mongodb+srv://admin:kc91ALq2rS7zwAMM@cluster0.li9fa25.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-  )
+  .connect(process.env.MONGODB_URI)
   .then(() => {
     console.log("God has answered your prayers, DB is connected");
     app.listen(1999, () => {
